@@ -1,0 +1,12 @@
+{
+    "name": "testModel",
+    "fields": {
+        "id": "Key",
+          "counts": "Number",
+          "name": "String",
+          "state": {
+              "type": "Enum",
+              "of": "start, end"
+          }
+    }
+}

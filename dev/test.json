@@ -1,0 +1,74 @@
+{
+    "name": "messageCasa",
+    "parents": [
+        "project",
+        "chat"
+    ],
+    "fields": {
+        "id": "Key",
+        "name": "String",
+	    "active": "Boolean",
+        "created": "Timestamp",
+        "user": {
+	        "type": "Reference",
+            "of": "User"
+	    },
+        "type": {
+	        "type": "Enum",
+	        "of": "Text, File"
+	    },
+        "message": {
+            "type": "String",
+            "description": "A little message"
+        },
+        "filepath": "String",
+        "testWord": "String",
+        "state": {
+            "type": "Enum",
+            "of": "active, pendig, cancel"
+        },
+        "location": {
+            "type": "Map",
+            "fields": {
+                "name": "String",
+                "street": "String",
+                "district": "String",
+                "tool": {
+                    "type": "Enum",
+                    "of": "all, too, small"
+                },
+                "extras": "Map",
+                "extraName": {
+                    "type": "String",
+                    "description": "Used in special cases"
+                },
+                "geolocation": {
+                    "type": "Map",
+                    "fields": {
+                        "latitude": "Number",
+                        "longitude": "Number",
+                        "geohash": {
+                            "type": "String",
+                            "description": "Nine digits"
+                        }
+                    }
+                }
+            }
+        },
+        "extras":{
+            "type": "Map",
+            "description": "Map of extra data"
+        },
+        "stats": {
+            "type": "List",
+            "of": "Map",
+            "fields": {
+                "clicks": "Int",
+                "views": "Float"
+            }
+        }
+    },
+    "subcollections": [
+        "user"
+    ]
+}
