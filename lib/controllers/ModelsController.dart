@@ -1,10 +1,8 @@
 import 'dart:collection';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:tomentosa/models/model.dart';
-import 'package:tomentosa/services/ErrorService.dart';
-import 'package:tomentosa/utils/constants/JsonNames.dart';
+import 'package:tomentosa/services/ModelsService.dart';
 import 'package:tomentosa/utils/constants/ModelConstants.dart';
 import 'package:tomentosa/utils/constants/ProjectFiles.dart';
 import 'package:tomentosa/utils/constants/SystemCommands.dart';
@@ -12,117 +10,15 @@ import 'package:tomentosa/utils/utils.dart';
 
 class ModelsController {
 
+  /// Creates all components of a model in [projectRoot] from [jsonFile]
   static Future<Model> createModel(String jsonFile, String projectRoot) async{
-    Model model = loadModel(jsonFile);
+    Model model = ModelsService.loadModel(jsonFile);
     _actualProjectRoot = projectRoot;
     await _addCollectionNames(model.name);
     await _createCollectionFile(model);
     await _createEnumsFile(model);
     await _generateModelFile(model);
     return model;
-  }
-
-
-  /// Loads a model form a json file
-  static Model loadModel(String jsonFile){
-    _verifyJson(jsonFile);
-    _actualFileName = jsonFile;
-    File file = File(jsonFile);
-    String jsonString = file.readAsStringSync();
-    Map<String, dynamic> jsonMap = json.decode(jsonString);
-    _verifyJsonValues(jsonMap);
-    Model res = Model(
-      name: jsonMap[JsonNames.NAME],
-      parents: [],
-      subcollections: [],
-    );
-    if(jsonMap.containsKey(JsonNames.PARENTS)){
-      res.parents = jsonMap[JsonNames.PARENTS].cast<String>();
-    }
-    if(jsonMap.containsKey(JsonNames.SUB_COLLECTIONS)){
-      res.subcollections = jsonMap[JsonNames.SUB_COLLECTIONS].cast<String>();
-    }
-    res.fields = _loadFields(jsonMap[JsonNames.FIELDS] as Map<String, dynamic>);
-    return res;
-  }
-
-  /// Load fileds of [fieldMap]
-  ///
-  /// This function is recursive for field with map and list type with fields inside
-  static List<Field> _loadFields(Map<String, dynamic> fieldMap){
-    List<Field> res = [];
-    fieldMap.forEach((key, value){
-      Field field = Field(
-        name: key,
-        fieldTypeOf: "",
-        description: "",
-      );
-      if(value is String){
-        field.setFieldType(value);
-        if(field.fieldType == FieldType.error){
-          ModelErrorService.throwNotValidType(_actualFileName, value);
-        }
-        else if(field.fieldType == FieldType.enum_type){
-          ModelErrorService.throwMustHaveOf(_actualFileName, value, field.name);
-        }
-      }
-      else{
-        if(!value.containsKey(JsonNames.TYPE)){
-          ModelErrorService.throwMustHaveType(_actualFileName, field.name);
-        }
-        field.setFieldType(value[JsonNames.TYPE]);
-        if(field.fieldType == FieldType.error){
-          ModelErrorService.throwNotValidType(_actualFileName, value[JsonNames.TYPE]);
-        }
-        if(value.containsKey(JsonNames.OF)){
-          field.fieldTypeOf = value[JsonNames.OF];
-          if(field.fieldTypeOf.isEmpty){
-            ModelErrorService.throwEmptyOption(_actualFileName, field.name, JsonNames.OF);
-          }
-          if(field.fieldType == FieldType.enum_type){
-            field.setEnumExtras();
-          }
-        }
-        else if(field.fieldType == FieldType.enum_type){
-          ModelErrorService.throwMustHaveOf(
-            _actualFileName,
-            FieldTypeStrings.ENUM_STRING,
-            field.name
-          );
-        }
-        if(value.containsKey(JsonNames.DESCRIPTION)){
-          field.description = value[JsonNames.DESCRIPTION];
-        }
-        if(value.containsKey(JsonNames.FIELDS)){
-          if(field.fieldType != FieldType.map_type && 
-              field.fieldType != FieldType.list){
-            ModelErrorService.throwFieldsOption(_actualFileName, field.name);
-          }
-          field.fields = _loadFields(value[JsonNames.FIELDS] as Map<String, dynamic>);
-        }
-      }
-      res.add(field);
-    });
-    return res;
-  }
-
-  /// Verify if [fileName] is a json file
-  ///
-  /// It throws an error if the file is not a json file
-  static void _verifyJson(String jsonFile){
-    if(jsonFile.split('.').last != JsonNames.JSON_EXTENSION){
-      ModelErrorService.throwIsNotJson(jsonFile);
-    }
-  }
-
-  /// Verifies the principal values of a json model file
-  static void _verifyJsonValues(Map<String, dynamic> jsonMap){
-    if(!jsonMap.containsKey(JsonNames.NAME)){
-      ModelErrorService.throwHasNotValue(_actualFileName, JsonNames.NAME);
-    }
-    if(!jsonMap.containsKey(JsonNames.FIELDS)){
-      ModelErrorService.throwHasNotValue(_actualFileName, JsonNames.FIELDS);
-    }
   }
 
   /// Adds the collection name to the Firestore Constans file
@@ -251,9 +147,14 @@ class ModelsController {
   ){
     String constructor = '';
     String classBlock = '';
+    String copyWith = '';
+    String copyWithReturn = '';
     classBlock = 'class ' + className + '{\n\n';
     constructor = '\t' + className + '({\n';
+    copyWith = '\t' + className + ' copyWith({\n';
+    copyWithReturn = '\t\treturn ' + className + '(\n';
     List<String> blocks = [];
+    String typeString = '';
     for(Field field in fields){
       switch(field.fieldType){
         case FieldType.key:
@@ -261,24 +162,31 @@ class ModelsController {
           constructor += '\t\tthis.id,\n';
           break;
         case FieldType.m_string:
+          typeString = 'String';
           classBlock += '\tString ' + field.name + ';\n';
           break;
         case FieldType.boolean:
+          typeString = 'bool';
           classBlock += '\tbool ' + field.name + ';\n';
           break;
         case FieldType.m_int:
+          typeString = 'int';
           classBlock += '\tint ' + field.name + ';\n';
           break;
         case FieldType.number:
+          typeString = 'double';
           classBlock += '\tdouble ' + field.name + ';\n';
           break;
         case FieldType.m_double:
+          typeString = 'double';
           classBlock += '\tdouble ' + field.name + ';\n';
           break;
         case FieldType.timestamp:
+          typeString = 'DateTime';
           classBlock += '\tDateTime ' + field.name + ';\n';
           break;
         case FieldType.list:
+          typeString = 'List<dynamic>';
           classBlock += '\tList<dynamic> ' + field.name + '; // The type cannot be deduced,change the type\n';
           if(field.fields != null && field.fields.isNotEmpty){
             blocks.addAll(_writeFieldsInModelFile(
@@ -293,12 +201,14 @@ class ModelsController {
           break;
         case FieldType.enum_type:
           String temp = Utils.upperFirstLetter(field.name);
+          typeString = modelName + temp;
           classBlock += '\t' + modelName + temp + ' ' + field.name + ';\n';
           /// TODO imports
           break;
         case FieldType.map_type:
           String tempClassName = Utils.upperFirstLetter(field.name);
           classBlock += '\t' + modelName + tempClassName + ' ' + field.name + ';\n';
+          typeString = modelName + tempClassName;
           if(field.fields != null && field.fields.isNotEmpty){
             blocks.addAll(_writeFieldsInModelFile(
               modelName,
@@ -308,6 +218,7 @@ class ModelsController {
           }
           break;
         case FieldType.geopoint:
+          typeString = 'tCoordinates';
           classBlock += '\tCoordinates ' + field.name + ';\n';
           break;
         default:
@@ -315,16 +226,20 @@ class ModelsController {
       }
       if(field.fieldType != FieldType.key){
         constructor += '\t\tthis.' + field.name + ',\n';
+        copyWith += '\t\t' + typeString + ' ' + field.name + ',\n';
+        copyWithReturn += '\t\t\t' + field.name + ': ' + field.name + ' ?? this.' + field.name + ',\n';
       }
     }
     constructor += '\t});\n\n';
-    classBlock += '\n' + constructor;
+    copyWithReturn += '\t\t);\n';
+    copyWith += '\t}){\n' + copyWithReturn + '\t}\n\n';
+    classBlock += '\n' + constructor + copyWith;
     classBlock += '}\n\n';
     blocks.add(classBlock);
     return blocks;
   }
 
-  static String _actualFileName;
+  
   static String _actualProjectRoot;
 
 

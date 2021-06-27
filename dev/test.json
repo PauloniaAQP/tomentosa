@@ -1,5 +1,5 @@
 {
-    "name": "messageCasa",
+    "name": "message",
     "parents": [
         "project",
         "chat"
@@ -25,7 +25,8 @@
         "testWord": "String",
         "state": {
             "type": "Enum",
-            "of": "active, pendig, cancel"
+            "of": "active, pendig, cancel",
+            "description": "State of this message"
         },
         "location": {
             "type": "Map",
@@ -62,6 +63,7 @@
         "stats": {
             "type": "List",
             "of": "Map",
+            "description": "All stats of this message",
             "fields": {
                 "clicks": "Int",
                 "views": "Float"

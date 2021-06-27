@@ -41,4 +41,12 @@ class Utils{
     return shell.run(command);
   }
 
+  /// Adss [identation] number of identations to [string]
+  static String addIdentation(String string, int identation){
+    for(int i = 0; i < identation; i++){
+      string = '\t' + string;
+    }
+    return string;
+  }
+
 }

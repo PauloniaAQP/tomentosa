@@ -4,11 +4,11 @@ import 'dart:io';
 import 'package:test/test.dart';
 import 'package:tomentosa/controllers/ModelsController.dart';
 import 'package:tomentosa/models/model.dart';
+import 'package:tomentosa/services/ModelsService.dart';
 import 'package:tomentosa/utils/constants/JsonNames.dart';
 import 'package:tomentosa/utils/constants/ProjectFiles.dart';
 
 void main(){
-
 
   group('load model functionality', (){
 
@@ -18,24 +18,24 @@ void main(){
     String nameModel = 'testModel';
 
     test('_verifyJson()', (){
-      expect(() => ModelsController.loadModel('test.test'), throwsException);
+      expect(() => ModelsService.loadModel('test.test'), throwsException);
     });
 
     test('_verifyJsonValues()', (){
       jsonFile.writeAsStringSync(json.encode(testMap));
-      expect(() => ModelsController.loadModel(fileName), throwsException);
+      expect(() => ModelsService.loadModel(fileName), throwsException);
       testMap = {
         JsonNames.NAME: nameModel,
       };
       jsonFile.writeAsStringSync(json.encode(testMap));
-      expect(() => ModelsController.loadModel(fileName), throwsException);
+      expect(() => ModelsService.loadModel(fileName), throwsException);
       testMap = {
         JsonNames.FIELDS: {
 
         }
       };
       jsonFile.writeAsStringSync(json.encode(testMap));
-      expect(() => ModelsController.loadModel(fileName), throwsException);
+      expect(() => ModelsService.loadModel(fileName), throwsException);
       testMap = {
         JsonNames.NAME: 'testModel',
         JsonNames.FIELDS: {
@@ -43,7 +43,7 @@ void main(){
         }
       };
       jsonFile.writeAsStringSync(json.encode(testMap));
-      expect(() => ModelsController.loadModel(fileName), returnsNormally);
+      expect(() => ModelsService.loadModel(fileName), returnsNormally);
     });
 
     test('loadModel() & _loadFields()', (){
@@ -55,57 +55,57 @@ void main(){
       };
       testMap[JsonNames.FIELDS]['id'] = 'Nothing';
       jsonFile.writeAsStringSync(json.encode(testMap));
-      expect(() => ModelsController.loadModel(fileName), throwsException);
+      expect(() => ModelsService.loadModel(fileName), throwsException);
       testMap[JsonNames.FIELDS]['id'] = 'String';
       jsonFile.writeAsStringSync(json.encode(testMap));
-      expect(() => ModelsController.loadModel(fileName), returnsNormally);
+      expect(() => ModelsService.loadModel(fileName), returnsNormally);
       testMap[JsonNames.FIELDS]['states'] = 'Enum';
       jsonFile.writeAsStringSync(json.encode(testMap));
-      expect(() => ModelsController.loadModel(fileName), throwsException);
+      expect(() => ModelsService.loadModel(fileName), throwsException);
       testMap[JsonNames.FIELDS]['states'] = {
         'type': 'Enum',
         'of': 'start, end'
       };
       jsonFile.writeAsStringSync(json.encode(testMap));
-      expect(() => ModelsController.loadModel(fileName), returnsNormally);
+      expect(() => ModelsService.loadModel(fileName), returnsNormally);
       testMap[JsonNames.FIELDS]['states'] = {
         'of': 'start, end'
       };
       jsonFile.writeAsStringSync(json.encode(testMap));
-      expect(() => ModelsController.loadModel(fileName), throwsException);
+      expect(() => ModelsService.loadModel(fileName), throwsException);
       testMap[JsonNames.FIELDS]['states'] = {
         'type': 'Enum',
       };
       jsonFile.writeAsStringSync(json.encode(testMap));
-      expect(() => ModelsController.loadModel(fileName), throwsException);
+      expect(() => ModelsService.loadModel(fileName), throwsException);
       testMap[JsonNames.FIELDS]['states'] = {
         'type': 'Enum',
         'of': 'start, end'
       };
       jsonFile.writeAsStringSync(json.encode(testMap));
-      expect(() => ModelsController.loadModel(fileName), returnsNormally);
+      expect(() => ModelsService.loadModel(fileName), returnsNormally);
       testMap[JsonNames.FIELDS]['counts'] = {
         'type': 'Nothing',
       };
       jsonFile.writeAsStringSync(json.encode(testMap));
-      expect(() => ModelsController.loadModel(fileName), throwsException);
+      expect(() => ModelsService.loadModel(fileName), throwsException);
       testMap[JsonNames.FIELDS]['counts'] = {
         'type': 'List',
       };
       jsonFile.writeAsStringSync(json.encode(testMap));
-      expect(() => ModelsController.loadModel(fileName), returnsNormally);
+      expect(() => ModelsService.loadModel(fileName), returnsNormally);
       testMap[JsonNames.FIELDS]['counts'] = {
         'type': 'List',
         'of': '',
       };
       jsonFile.writeAsStringSync(json.encode(testMap));
-      expect(() => ModelsController.loadModel(fileName), throwsException);
+      expect(() => ModelsService.loadModel(fileName), throwsException);
       testMap[JsonNames.FIELDS]['counts'] = {
         'type': 'List',
         'of': 'Map',
       };
       jsonFile.writeAsStringSync(json.encode(testMap));
-      expect(() => ModelsController.loadModel(fileName), returnsNormally);
+      expect(() => ModelsService.loadModel(fileName), returnsNormally);
       testMap[JsonNames.FIELDS]['views'] = {
         'type': 'Number',
         'description': 'Number of views',
@@ -114,13 +114,13 @@ void main(){
         }
       };
       jsonFile.writeAsStringSync(json.encode(testMap));
-      expect(() => ModelsController.loadModel(fileName), throwsException);
+      expect(() => ModelsService.loadModel(fileName), throwsException);
       testMap[JsonNames.FIELDS]['views'] = {
         'type': 'Number',
         'description': 'Number of views',
       };
       jsonFile.writeAsStringSync(json.encode(testMap));
-      expect(() => ModelsController.loadModel(fileName), returnsNormally);
+      expect(() => ModelsService.loadModel(fileName), returnsNormally);
       testMap[JsonNames.FIELDS]['counts'] = {
         'type': 'List',
         'of': 'Map',
@@ -129,7 +129,7 @@ void main(){
         }
       };
       jsonFile.writeAsStringSync(json.encode(testMap));
-      expect(() => ModelsController.loadModel(fileName), returnsNormally);
+      expect(() => ModelsService.loadModel(fileName), returnsNormally);
     });
 
     test('createModel() & _addCollectionNames()'
